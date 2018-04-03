@@ -14,51 +14,8 @@ N_default = 50
 xlim_default = (-3, 3)
 ylim_default = (-3, 3)
 
-def gen_gridded_space_PDF(features,cov_mats,N = N_default,xlim = xlim_default,ylim = ylim_default):
-    '''
-    This can be used to model gradients of feature 'intensity' via the PDF 
-    INPUT:
-    -features: a tuple in which the index corresponds to the number of the feature and element corresponds to the number of that type of feature
-    -cov_mat: 2x2 covariance matrix for each feature
-    -N: Integer number of grid points in each direction
-    -xlim: tuple composed of x_lb and x_ub
-    -ylim: tuple composed of y_lb and y_ub
 
-    OUTPUT:
-    -(X, Y, Z) tuple corresponding to a meshgrid of X, Y values and Z, which is the pdf of finding the corresponding feature
-    '''
-    
-    # create gridded space
-    X = np.linspace(xlim[0],xlim[1],N)
-    Y = np.linspace(ylim[0],ylim[1],N)
-    X, Y = np.meshgrid(X, Y)
-    # Pack X and Y into a single 3-dimensional array
-    pos = np.zeros(X.shape + (2,))
-    pos[:,:,0] = X
-    pos[:,:,1] = Y
-    
-    num_features = len(features)
-    Z_list = []
-    
-    for feature_ind in range(num_features):
-        num_of_this_feature = features[feature_ind]
-        cov_mat = cov_mats[feature_ind]
-        Z = np.zeros(X.shape)
-        for k in range(num_of_this_feature):
-            mean_x = np.random.uniform(xlim[0],xlim[1])
-            mean_y = np.random.uniform(ylim[0],ylim[1])
-            # Mean vector and covariance matrix
-            mu = np.array([mean_x, mean_y])
-            F = multivariate_normal(mu,cov_mat)
-
-            # add probabilities together to create final map
-            Z += F.pdf(pos)
-
-        Z_list.append(Z)
-        
-    return (X, Y, Z_list)
-
-def gen_gridded_space_DET(feature_dict,N = N_default,xlim = xlim_default,ylim = ylim_default):
+def gen_gridded_space_DET(feature_dict,oneFeaturePerPoint = True,N = N_default,xlim = xlim_default,ylim = ylim_default):
     '''
     This can be used to model maps that have different features, but each feature is deterministically at a point or not
     INPUT:
@@ -98,7 +55,13 @@ def gen_gridded_space_DET(feature_dict,N = N_default,xlim = xlim_default,ylim = 
             rad_cc  = (xct**2/(e.width/2.)**2) + (yct**2/(e.height/2.)**2)
             inds = np.where(rad_cc <=1)
             for k in range(len(inds[1])):
-                Z[(inds[0][k],inds[1][k])].append(feature_num)
+                if oneFeaturePerPoint:
+                    # only one entry in the list
+                    if not Z[(inds[0][k],inds[1][k])]:
+                        # only append if empty
+                        Z[(inds[0][k],inds[1][k])].append(feature_num)
+                else:
+                    Z[(inds[0][k],inds[1][k])].append(feature_num)
 
             ''' Another approach (more intuitive, but harder to put into a point index dictionary - Z):
             X_ellip = X[np.where(rad_cc <=1)]
@@ -125,6 +88,7 @@ def parse_map_for_GP(X,Y,Z,parseNoFeatures = False):
     x = np.linspace(x_lim[0],x_lim[1],N)
     y = np.linspace(y_lim[0],y_lim[1],N)
 
+    
     X_forGP = []
     y_forGP = []
     for inds in Z.keys():
@@ -178,7 +142,7 @@ def plot_truth_features(feature_dict,N = N_default,xlim = xlim_default,ylim = yl
     ax.legend(handles= legendHandlesList,loc='center left', bbox_to_anchor=(1, 0.5))
     plt.show()
 
-def plot_sampled_features(X,Y,Z,feature_dict,N = N_default,xlim = xlim_default,ylim = ylim_default,plotNoFeatures = True,alpha=0.2):
+def plot_sampled_features(X,Y,Z,feature_dict,N = N_default,xlim = xlim_default,ylim = ylim_default,plotNoFeatures = True,alpha=0.9,titleStr = 'Sampled Points for All Features' ):
     '''
     INPUT:
     -features_dict: dictionary with key of feature type with the following value:
@@ -221,7 +185,7 @@ def plot_sampled_features(X,Y,Z,feature_dict,N = N_default,xlim = xlim_default,y
         ax.scatter(x[x_inds],y[y_inds],color=feature_color,alpha=alpha)
 
     # create legend based on colors
-    titleStr = 'Sampled Points for All Features'
+    
     ax.set_xlim(xlim[0],xlim[1])
     ax.set_ylim(ylim[0],ylim[1])
     plt.suptitle(titleStr)
@@ -232,3 +196,48 @@ def plot_sampled_features(X,Y,Z,feature_dict,N = N_default,xlim = xlim_default,y
     # Put a legend to the right of the current axis
     ax.legend(handles= legendHandlesList,loc='center left', bbox_to_anchor=(1, 0.5))
     plt.show()
+ 
+
+def gen_gridded_space_PDF(features,cov_mats,N = N_default,xlim = xlim_default,ylim = ylim_default):
+    '''
+    This can be used to model gradients of feature 'intensity' via the PDF 
+    INPUT:
+    -features: a tuple in which the index corresponds to the number of the feature and element corresponds to the number of that type of feature
+    -cov_mat: 2x2 covariance matrix for each feature
+    -N: Integer number of grid points in each direction
+    -xlim: tuple composed of x_lb and x_ub
+    -ylim: tuple composed of y_lb and y_ub
+
+    OUTPUT:
+    -(X, Y, Z) tuple corresponding to a meshgrid of X, Y values and Z, which is the pdf of finding the corresponding feature
+    '''
+    
+    # create gridded space
+    X = np.linspace(xlim[0],xlim[1],N)
+    Y = np.linspace(ylim[0],ylim[1],N)
+    X, Y = np.meshgrid(X, Y)
+    # Pack X and Y into a single 3-dimensional array
+    pos = np.zeros(X.shape + (2,))
+    pos[:,:,0] = X
+    pos[:,:,1] = Y
+    
+    num_features = len(features)
+    Z_list = []
+    
+    for feature_ind in range(num_features):
+        num_of_this_feature = features[feature_ind]
+        cov_mat = cov_mats[feature_ind]
+        Z = np.zeros(X.shape)
+        for k in range(num_of_this_feature):
+            mean_x = np.random.uniform(xlim[0],xlim[1])
+            mean_y = np.random.uniform(ylim[0],ylim[1])
+            # Mean vector and covariance matrix
+            mu = np.array([mean_x, mean_y])
+            F = multivariate_normal(mu,cov_mat)
+
+            # add probabilities together to create final map
+            Z += F.pdf(pos)
+
+        Z_list.append(Z)
+        
+    return (X, Y, Z_list)
