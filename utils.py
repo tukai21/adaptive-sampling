@@ -47,15 +47,39 @@ class GP_Plotter():
     def plot_GP_and_data(self,figNumber = 1,title = "A GP with Training Data",plotData = True,linePlot = np.array([])):
         
         
-        fig = plt.figure(figNumber,figsize=(10, 5))
+        fig = plt.figure(figNumber,figsize=(6, 5))
         ax = fig.add_subplot(1, 1, 1) 
         Z = self.GP.predict_proba(np.c_[self.xx.ravel(), self.yy.ravel()])
         num_features = Z.shape[1]
-        
-        # Put the result into a color plot
-        Z = Z.reshape((self.xx.shape[0], self.xx.shape[1], num_features ))
-        ax.imshow(Z, extent=(self.all_limits), origin="lower")
-
+ 
+        if num_features == 2:
+            # Append on a blue channel (all equal to zero)
+            Z = np.append(Z,np.zeros((Z.shape[0],1)),axis = 1)
+            # Put the result into a color plot
+            Z = Z.reshape((self.xx.shape[0], self.xx.shape[1], num_features + 1 ))
+            ax.imshow(Z, extent=(self.all_limits), origin="lower")
+            # Shrink current axis by 20%
+            box = ax.get_position()
+            ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+            # Put a legend to the right of the current axis
+            legendHandlesList = [self.legendHandlesList[0],self.legendHandlesList[1]]
+            ax.legend(handles= legendHandlesList,loc='center left', bbox_to_anchor=(1, 0.5)) 
+            '''
+            Z = Z[:,1].reshape((self.xx.shape[0], self.xx.shape[1]))
+            contourPlot = ax.contourf(self.xx,self.yy,Z, extent=(self.all_limits), origin="lower")
+            cbar = fig.colorbar( contourPlot  )
+            cbar.ax.set_ylabel('Probability of Feature #1')'''
+            
+        else:
+            # Put the result into a color plot
+            Z = Z.reshape((self.xx.shape[0], self.xx.shape[1], num_features ))
+            ax.imshow(Z, extent=(self.all_limits), origin="lower")
+            # Shrink current axis by 20%
+            box = ax.get_position()
+            ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+            # Put a legend to the right of the current axis
+            ax.legend(handles= self.legendHandlesList,loc='center left', bbox_to_anchor=(1, 0.5)) 
+            
         # Plot also the training points
         if plotData:
             ax.scatter(self.X_train[:, 0], self.X_train[:, 1], c=np.array(["r", "g", "b"])[self.y_train],
@@ -72,16 +96,11 @@ class GP_Plotter():
         plt.title("%s, LML: %.3f" %
                   (title, self.GP.log_marginal_likelihood(self.GP.kernel_.theta)))
                    
-        # Shrink current axis by 20%
-        box = ax.get_position()
-        ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
-
-        # Put a legend to the right of the current axis
-        ax.legend(handles= self.legendHandlesList,loc='center left', bbox_to_anchor=(1, 0.5)) 
+        
         return fig,ax
 
     def plot_GP_entropy(self,figNumber = 2, title = "A GP's entropy",points_to_plot = np.array([]),star_point =np.array([])):
-        fig = plt.figure(figNumber,figsize=(10, 5))
+        fig = plt.figure(figNumber,figsize=(6, 5))
         ax = fig.add_subplot(1, 1, 1) 
         Z = self.GP.predict_proba(np.c_[self.xx.ravel(), self.yy.ravel()])
         num_features = Z.shape[1]
@@ -118,7 +137,7 @@ class GP_Plotter():
     
     def plot_GP_expected_science(self,feature_stats ,figNumber = 3, title = "A GP's Expected Science Gain",points_to_plot = np.array([]),star_point = np.array([])):
         
-        fig = plt.figure(figNumber,figsize=(10, 5))
+        fig = plt.figure(figNumber,figsize=(6, 5))
         ax = fig.add_subplot(1, 1, 1) 
         Z = self.GP.predict_proba(np.c_[self.xx.ravel(), self.yy.ravel()])
         num_features = Z.shape[1]
