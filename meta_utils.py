@@ -106,7 +106,7 @@ def parse_map_for_GP(X,Y,Z,parseNoFeatures = False):
     
     return (X_forGP, y_forGP)
 
-def plot_truth_features(feature_dict,N = N_default,xlim = xlim_default,ylim = ylim_default):
+def plot_truth_features(feature_dict,N = N_default,xlim = xlim_default,ylim = ylim_default, oneFeature = False):
     '''
     INPUT:
     -features_dict: dictionary with key of feature type with the following value:
@@ -127,6 +127,9 @@ def plot_truth_features(feature_dict,N = N_default,xlim = xlim_default,ylim = yl
             e.set_clip_box(ax.bbox)
             e.set_alpha(0.5)
             e.set_facecolor(feature_color)
+        
+        if oneFeature:
+            break
             
     
     # create legend based on colors
