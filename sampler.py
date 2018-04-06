@@ -23,8 +23,6 @@ class AdaptiveSampling:
         self.points_traveled = deque([self.pose])
 
     def start_explore(self):
-        assert self.model.is_trained, "belief model has not been set up yet!"
-
         while self.distance_budget > 0 and self.sampling_budget > 0:
             # sample next point
             next_point, reward = self.pick_next_point()
@@ -84,15 +82,16 @@ class AdaptiveSampling:
         return linalg.norm(self.pose - point)
 
     def pick_next_point(self):
-        look_horizon = min([self.horizon, self.distance_budget])
-        available_points = self._get_points_from_horizon(self.world_map, look_horizon)
+        available_points = self._get_points_from_horizon(self.world_map)
         next_point, reward = self.sample_explore_exploit(available_points)
         return next_point, reward
 
-    def _get_points_from_horizon(self, points, look_horizon):
+    def _get_points_from_horizon(self, points):
+        look_horizon = min([self.distance_budget, self.horizon])
         points_around = points[np.all(points != self.pose, axis=1)]
         tree = KDTree(points_around)
         ind = tree.query_radius(self.pose.reshape([1, -1]), r=look_horizon)[0]
+        ind = sorted(ind)
         return points_around[ind]
 
     def _get_location_stats(self, point):
