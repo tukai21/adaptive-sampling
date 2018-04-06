@@ -153,6 +153,8 @@ def test_movement_cost(SamplerClass):
         assert isinstance(cost, float), "Your cost is not a scalar."
         assert_almost_equal(cost, ref_cost, err_msg="Your computed cost is wrong.")
 
+    test_ok()
+
 
 def test_pick_next_point(SamplerClass):
     sampler, points = init_test(SamplerClass)
