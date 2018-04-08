@@ -93,8 +93,9 @@ class GP_Plotter():
         plt.ylabel('Y')
         plt.xlim(self.xx.min(), self.xx.max())
         plt.ylim(self.yy.min(), self.yy.max())
-        plt.title("%s, LML: %.3f" %
-                  (title, self.GP.log_marginal_likelihood(self.GP.kernel_.theta)))
+        plt.title("%s" %(title))
+        #plt.title("%s, LML: %.3f" %(title, self.GP.log_marginal_likelihood(self.GP.kernel_.theta)))
+                  
                    
         
         return fig,ax
@@ -111,7 +112,11 @@ class GP_Plotter():
 
         for probs_ind in range(Z.shape[0]):
             for el in Z[probs_ind,:]:
-                Z_entropy[probs_ind] += -el*np.log2(el)
+                if np.isclose(el, 0.0):
+                    # we should be adding 0 times positive infinity, which is 0 by convention of entropy
+                    Z_entropy[probs_ind] += 0
+                else:
+                    Z_entropy[probs_ind] += -el*np.log2(el)
         
         # Put the result into a color plot
         Z = Z_entropy.reshape((self.xx.shape[0], self.xx.shape[1] ))
@@ -127,8 +132,9 @@ class GP_Plotter():
         plt.ylabel('Y')
         plt.xlim(self.xx.min(), self.xx.max())
         plt.ylim(self.yy.min(), self.yy.max())
-        plt.title("%s, LML: %.3f" %
-                  (title, self.GP.log_marginal_likelihood(self.GP.kernel_.theta)))
+        plt.title("%s" %(title))
+        #plt.title("%s, LML: %.3f" %(title, self.GP.log_marginal_likelihood(self.GP.kernel_.theta)))
+                  
                    
         # plot
         cbar = fig.colorbar( contourPlot  )
