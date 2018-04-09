@@ -2,15 +2,24 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 from sklearn.gaussian_process import GaussianProcessClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from tests import plot_dict
 
 
-class GaussianProcess:
-    def __init__(self, kernel, optimize=True, plot_dict=None):
+class BeliefModel:
+    def __init__(self, kernel = None, optimize=True, plot_dict=plot_dict, gpFlag = True):
         if optimize:
-            self.model = GaussianProcessClassifier(kernel, warm_start=True)
+            if gpFlag:
+                self.model = GaussianProcessClassifier(kernel, warm_start=True)
+            else:
+                self.model = KNeighborsClassifier()
         else:
-            self.model = GaussianProcessClassifier(kernel, warm_start=True, optimizer=None)
-
+            if gpFlag:
+                self.model = GaussianProcessClassifier(kernel, warm_start=True, optimizer=None)
+            else:
+                self.model = KNeighborsClassifier()
+                
+        self.gpFlag = gpFlag
         self.X_train = None
         self.y_train = None
         self.is_trained = False
@@ -47,11 +56,14 @@ class GaussianProcess:
         plt.ylabel('Y')
         plt.xlim(self.xx.min(), self.xx.max())
         plt.ylim(self.yy.min(), self.yy.max())
-        plt.title("%s, LML: %.3f" %
-                  (title, self.model.log_marginal_likelihood(self.model.kernel_.theta)))
+        if self.gpFlag:
+            plt.title("%s, LML: %.3f" %
+                      (title, self.model.log_marginal_likelihood(self.model.kernel_.theta)))
+        else:
+            plt.title(title)
 
     def plot_belief(self, title="A GP belief with Training Data", figNumber=1, plotData=True, linePlot=np.array([])):
-        assert self.is_trained, "The GP model needs to be trained to plot a belief map"
+        #assert self.is_trained, "The GP model needs to be trained to plot a belief map"
 
         if not self.plot_ready:
             self._format_data()
@@ -92,19 +104,34 @@ class GaussianProcess:
             ax.plot(linePlot[:, 0], linePlot[:, 1], c="k", lineWidth=5)
 
         self._format_plot(title)
+        
+        plt.show()
 
         return fig, ax
 
     def plot_entropy(self, figNumber=2, title="A GP's entropy", points_to_plot=np.array([]), star_point=np.array([])):
-        assert self.is_trained, "The GP model needs to be trained to plot a belief map"
+        #assert self.is_trained, "The GP model needs to be trained to plot a belief map"
 
         if not self.plot_ready:
             self._format_data()
 
         fig = plt.figure(figNumber, figsize=(6, 5))
         ax = fig.add_subplot(1, 1, 1)
+        
+        if self.gpFlag:
+            entropy = np.sum(- self.likelihood * np.log2(self.likelihood), axis=1)
+        else:
+            
+            entropy = np.zeros(self.likelihood.shape[0])
 
-        entropy = np.sum(- self.likelihood * np.log2(self.likelihood), axis=1)
+            for probs_ind in range(self.likelihood.shape[0]):
+                for el in self.likelihood[probs_ind,:]:
+                    if np.isclose(el, 0.0):
+                        # we should be adding 0 times positive infinity, which is 0 by convention of entropy
+                        entropy[probs_ind] += 0
+                    else:
+                        entropy[probs_ind] += -el*np.log2(el)
+
 
         # Put the result into a color plot
         Z = entropy.reshape((self.xx.shape[0], self.xx.shape[1]))
@@ -121,11 +148,14 @@ class GaussianProcess:
         # plot
         cbar = fig.colorbar(contourPlot)
         cbar.ax.set_ylabel('Entropy')
+        
+        plt.show()
+        
         return fig, ax
 
     def plot_science(self, feature_stats, figNumber=3, title="A GP's Expected Science Gain",
                      points_to_plot=np.array([]), star_point=np.array([])):
-        assert self.is_trained, "The GP model needs to be trained to plot a belief map"
+       # assert self.is_trained, "The GP model needs to be trained to plot a belief map"
 
         if not self.plot_ready:
             self._format_data()
@@ -157,6 +187,13 @@ class GaussianProcess:
         # plot
         cbar = fig.colorbar(contourPlot)
         cbar.ax.set_ylabel('Expected Science Return (mean only)')
+        
+        plt.show()
         return fig, ax
 
+    
 
+        
+       
+
+        
