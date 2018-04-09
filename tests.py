@@ -23,6 +23,7 @@ plot_dict = {
 
 feature_stats = [(0, 1), (6, 4), (5, 9)]
 
+
 def test_belief(model, title, N=5, gpFlag = True, plotChoice = "belief" ):
     X, Y, Z = gen_gridded_space_DET(feature_dict, N=N)
     X_train, y_train = parse_map_for_GP(X, Y, Z)
