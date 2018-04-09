@@ -1,10 +1,10 @@
 import numpy as np
-from numpy.testing import assert_almost_equal, assert_array_compare
+from numpy.testing import assert_almost_equal
 import operator
 
 from matplotlib.patches import Ellipse
 from sklearn.gaussian_process.kernels import RBF
-from gp import GaussianProcess
+from belief_model import BeliefModel
 from gridspace import gen_gridded_space_DET, parse_map_for_GP
 
 
@@ -23,6 +23,20 @@ plot_dict = {
 
 feature_stats = [(0, 1), (6, 4), (5, 9)]
 
+def test_belief(model, title, N=5, gpFlag = True, plotChoice = "belief" ):
+    X, Y, Z = gen_gridded_space_DET(feature_dict, N=N)
+    X_train, y_train = parse_map_for_GP(X, Y, Z)
+    
+    model.fit(X_train, y_train)
+    if  plotChoice == "entropy":
+        model.plot_entropy(title=title)
+
+    elif plotChoice == "belief":
+        model.plot_belief(title=title)
+    else:
+        # Plot both with subplot
+        return
+        
 
 def test_ok():
     """ If execution gets to this point, print out a happy message """
