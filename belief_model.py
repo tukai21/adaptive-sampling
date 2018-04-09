@@ -3,7 +3,14 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 from sklearn.gaussian_process import GaussianProcessClassifier
 from sklearn.neighbors import KNeighborsClassifier
-from tests import plot_dict
+
+
+feature_name_colors = (('Red', 'No Features'), ('Green', 'Feature 1'), ('Blue', 'Feature 2'))
+
+
+plot_dict = {
+    'feature_name_colors': feature_name_colors
+}
 
 
 class BeliefModel:
