@@ -2,7 +2,7 @@ import numpy as np
 from scipy import linalg
 from collections import deque
 from sklearn.neighbors import KDTree
-from gp import GaussianProcess
+from belief_model import BeliefModel
 
 
 class AdaptiveSampling:
