@@ -87,7 +87,7 @@ class BeliefModel:
 
         num_axes = len(plot_types)
         if num_axes == 3:
-            fig = plt.figure(fig_id, figsize=(6, 22))
+            fig = plt.figure(fig_id, figsize=(20, 5))
         elif num_axes == 2:
             fig = plt.figure(fig_id, figsize=(14, 5))
             # fig = plt.figure(fig_id)
@@ -133,7 +133,7 @@ class BeliefModel:
             # box = ax.get_position()
             # ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
             # Put a legend to the right of the current axis
-            ax.legend(handles=self.legend_handles, loc='lower left', bbox_to_anchor=(1, 0.5))
+            ax.legend(handles=self.legend_handles, loc='lower left', bbox_to_anchor=(1, 0.6))
 
             # Plot also the training points
         if show_train:
@@ -340,3 +340,14 @@ class BeliefModel:
         
         plt.show()
         return fig, ax
+
+
+def compare_models(model_1, model_2, add_random_points=True):
+    if add_random_points:
+        np.random.seed(0)
+        random_points = np.random.choice([1])  # TODO: you need to provide random points here
+        model_1.plot(title='Model_1', plot_types=('belief', 'entropy'), fig_id=1, points=random_points)
+        model_2.plot(title='Model_2', plot_types=('belief', 'entropy'), fig_id=1, points=random_points)
+    else:
+        model_1.plot(title='Model_1', plot_types=('belief', 'entropy'), fig_id=1)
+        model_2.plot(title='Model_2', plot_types=('belief', 'entropy'), fig_id=1)

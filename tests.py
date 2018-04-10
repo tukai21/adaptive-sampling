@@ -58,7 +58,7 @@ def init_test(SamplerClass):
 
     kernel = 1.0 * RBF([1.0, 1.0])
     optimize = True
-    model = GaussianProcess(kernel, optimize, plot_dict)
+    model = BeliefModel(kernel, optimize, plot_dict)
     model.fit(X_init, y_init)
 
     init_pose = np.array([0, 0])
@@ -144,11 +144,6 @@ def test_update_belief(SamplerClass):
 
     new_belief = sampler.model.predict_proba(test_point)[0]
     ref_belief = np.array([0.47158731, 0.26481555, 0.26359714])
-
-    msg = """You have not updated your belief. 
-    Please make sure you call self.model.fit(X, y) in your function.
-    """
-    assert_array_compare(operator.__ne__, prev_belief, new_belief, err_msg=msg)
 
     msg = """Your updated belief is different from expected belief. 
     Please make sure you don't make any modifications to the BaseSampler class.
