@@ -8,18 +8,18 @@ from map_truth import plot_dict, feature_stats
 
 
 class BeliefModel:
-    def __init__(self, kernel=None, optimize=True, plot_dict=plot_dict, gpFlag=True):
+    def __init__(self, kernel=None, optimize=True, plot_dict=plot_dict, gpFlag=True,n_neighbors = 8):
         if optimize:
             if gpFlag:
                 self.model = GaussianProcessClassifier(kernel, warm_start=True)
             else:
-                self.model = KNeighborsClassifier()
+                self.model = KNeighborsClassifier(n_neighbors = n_neighbors)
         else:
             if gpFlag:
                 self.model = GaussianProcessClassifier(kernel, warm_start=True, optimizer=None)
             else:
-                self.model = KNeighborsClassifier()
-                
+                self.model = KNeighborsClassifier(n_neighbors = n_neighbors)
+        self.n_neighbors = n_neighbors       
         self.gpFlag = gpFlag
         self.X_train = None
         self.y_train = None
