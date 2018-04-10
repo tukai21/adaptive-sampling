@@ -59,9 +59,8 @@ class AdaptiveSampling:
 
     def sample_only_explore(self, points):
         likelihoods = self.model.predict_proba(points)
-        
-        
-        if  self.model.gpFlag:
+
+        if self.model.gpFlag:
             entropies = np.sum(-likelihoods * np.log2(likelihoods), axis=1)
         else:
             entropies = np.zeros(likelihoods.shape[0])
@@ -82,7 +81,7 @@ class AdaptiveSampling:
     def sample_explore_exploit(self, points):
         likelihoods = self.model.predict_proba(points)
         means = np.sum(likelihoods * np.array(self.feature_stats)[:, 0], axis=1)
-        if  self.model.gpFlag:
+        if self.model.gpFlag:
             entropies = np.sum(-likelihoods * np.log2(likelihoods), axis=1)
         else:
             entropies = np.zeros(likelihoods.shape[0])

@@ -6,6 +6,7 @@ from matplotlib.patches import Ellipse
 from sklearn.gaussian_process.kernels import RBF
 from belief_model import BeliefModel, compare_models
 from gridspace import gen_gridded_space_DET, parse_map_for_GP
+from sampler import AdaptiveSampling
 
 
 # Global constants
@@ -24,16 +25,16 @@ plot_dict = {
 feature_stats = [(0, 1), (6, 4), (5, 9)]
 
 
-def test_belief(model, title, N=5, gpFlag = True, plotChoice = "belief" ):
+def test_belief(model, title, N=5, gpFlag=True, plotChoice="belief" ):
     X, Y, Z = gen_gridded_space_DET(feature_dict, N=N)
     X_train, y_train = parse_map_for_GP(X, Y, Z)
     
     model.fit(X_train, y_train)
-    if  plotChoice == "entropy":
+    if plotChoice == "entropy":
         model.plot(plot_types=('belief', 'entropy'),title=title)
 
     elif plotChoice == "belief":
-        model.plot(plot_types=('belief'),title=title)
+        model.plot(plot_types=('belief'), title=title)
     else:
         model.plot(plot_types=('belief', 'entropy'),title=title)
         return
@@ -52,7 +53,7 @@ def test_ok():
 
 def init_test(SamplerClass):
     # RECOMMEND WE CHANGE to N=
-    X, Y, Z = gen_gridded_space_DET(feature_dict, N=3)
+    X, Y, Z = gen_gridded_space_DET(feature_dict, N=5)
     X_init, y_init = parse_map_for_GP(X, Y, Z)
     X, Y, Z = gen_gridded_space_DET(feature_dict, N=50)
     world_map, science_map = parse_map_for_GP(X, Y, Z)
@@ -75,130 +76,130 @@ def init_test(SamplerClass):
 
 def test_exploitation(SamplerClass):
     sampler, points = init_test(SamplerClass)
+    sampler_ref, _ = init_test(AdaptiveSampling)
     best_sample_loc, best_mean = sampler.sample_only_exploit(points)
-    ref_loc = np.array([-2.14285714, -0.06122449])
-    ref_mean = 3.673970240755864
-    sampler.model.plot(plot_types=('belief', 'science'),title="Selected Best Science Point (star)", points=np.array(points), star_point=np.array(best_sample_loc), feature_stats = feature_stats)
-    
-    
+    best_sample_loc_ref, best_mean_ref = sampler_ref.sample_only_exploit(points)
+
     assert best_sample_loc.shape == (2, ), "Your best_sample_loc has a wrong shape %s, which is expected to be (2, )." % best_sample_loc.shape
     assert isinstance(best_mean, float), "Your best_mean is not a scalar."
-    assert_almost_equal(best_mean, ref_mean, decimal=4, err_msg="Your best_mean has a wrong value.")
-    assert_almost_equal(best_sample_loc, ref_loc, decimal=4, err_msg="Your best_sample_loc has a wrong value.")
+    assert_almost_equal(best_mean, best_mean_ref, decimal=4, err_msg="Your best_mean has a wrong value.")
+    assert_almost_equal(best_sample_loc, best_sample_loc_ref, decimal=4, err_msg="Your best_sample_loc has a wrong value.")
+
     test_ok()
+    sampler.model.plot(plot_types=('belief', 'science'), title="Selected Best Science Point (star)",
+                       points=np.array(points), star_point=np.array(best_sample_loc), feature_stats=feature_stats)
 
 
 def test_exploration(SamplerClass):
     sampler, points = init_test(SamplerClass)
+    sampler_ref, _ = init_test(AdaptiveSampling)
 
     best_sample_loc, max_entropy = sampler.sample_only_explore(points)
-    ref_loc = np.array([1.7755102, -1.53061224])
-    ref_entropy = 1.5848915110699364
-    sampler.model.plot(plot_types=('belief', 'entropy'),title="Selected Best Explore Point (star)", points=np.array(points), star_point=np.array(best_sample_loc), feature_stats = feature_stats)
+    best_sample_loc_ref, max_entropy_ref = sampler_ref.sample_only_explore(points)
     
     assert best_sample_loc.shape == (2, ), "Your best_sample_loc has a wrong shape %s, which is expected to be (2, )." % best_sample_loc.shape
     assert isinstance(max_entropy, float), "Your max_entropy is not a scalar."
-    assert_almost_equal(max_entropy, ref_entropy, decimal=4, err_msg="Your max_entropy has a wrong value.")
-    assert_almost_equal(best_sample_loc, ref_loc, decimal=4, err_msg="Your best_sample_loc has a wrong value.")
+    assert_almost_equal(max_entropy, max_entropy_ref, decimal=4, err_msg="Your max_entropy has a wrong value.")
+    assert_almost_equal(best_sample_loc, best_sample_loc_ref, decimal=4, err_msg="Your best_sample_loc has a wrong value.")
+
     test_ok()
+    sampler.model.plot(plot_types=('belief', 'entropy'), title="Selected Best Explore Point (star)",
+                       points=np.array(points), star_point=np.array(best_sample_loc), feature_stats=feature_stats)
 
 
 def test_exploration_exploitation(SamplerClass):
     sampler, points = init_test(SamplerClass)
+    sampler_ref, _ = init_test(AdaptiveSampling)
 
     best_sample_loc, max_reward = sampler.sample_explore_exploit(points)
-    ref_loc = np.array([-2.14285714, -0.06122449])
-    ref_reward = 0.9995656321214331
-    sampler.model.plot(plot_types=('belief', 'entropy','science'),title="Selected Best Explore-Exploit Point (star)", points=np.array(points), star_point=np.array(best_sample_loc), feature_stats = feature_stats)
+    best_sample_loc_ref, max_reward_ref = sampler_ref.sample_explore_exploit(points)
     
     assert best_sample_loc.shape == (2, ), "Your best_sample_loc has a wrong shape %s, which is expected to be (2, )." % best_sample_loc.shape
     assert isinstance(max_reward, float), "Your max_reward is not a scalar."
-    assert_almost_equal(max_reward, ref_reward, decimal=4, err_msg="Your max_reward has a wrong value.")
-    assert_almost_equal(best_sample_loc, ref_loc, decimal=4, err_msg="Your best_sample_loc has a wrong value.")
+    assert_almost_equal(max_reward, max_reward_ref, decimal=4, err_msg="Your max_reward has a wrong value.")
+    assert_almost_equal(best_sample_loc, best_sample_loc_ref, decimal=4, err_msg="Your best_sample_loc has a wrong value.")
+
     test_ok()
+    sampler.model.plot(plot_types=('belief', 'entropy', 'science'), title="Selected Best Explore-Exploit Point (star)",
+                       points=np.array(points), star_point=np.array(best_sample_loc), feature_stats=feature_stats)
 
 
 def test_update_belief(SamplerClass):
-    
     sampler, points = init_test(SamplerClass)
+    sampler_ref, _ = init_test(AdaptiveSampling)
     
-    sampler.model.plot_belief(title="Initial Belief Model")
+    sampler.model.plot(plot_types=('belief', 'entropy'), title="Initial Belief Model")
     test_point = np.array([0, 1]).reshape(1, -1)
-    prev_belief = sampler.model.predict_proba(test_point)[0]
-    
-    
-    
+
     new_point = sampler.world_map[125]
     feature = sampler.science_map[125]
     new_sample = (new_point, np.array([feature]))
     X_new, y_new = sampler.update_belief(new_sample)
-    
-    final_model = sampler.model
-    final_model.plot_belief(title="Updated Belief Model")
-    ref_X_new = np.array([0.06122449, -2.75510204])
-    ref_y_new = np.array([0])
+    X_new_ref, y_new_ref = sampler_ref.update_belief(new_sample)
 
-    assert X_new.shape == (10, 2), "X_new has a wrong shape %s." % X_new.shape
-    assert y_new.shape == (10,), "y_new has a wrong shape %s." % y_new.shape
+    assert X_new.shape == X_new_ref.shape, "X_new has a wrong shape %s." % X_new.shape
+    assert y_new.shape == y_new_ref.shape, "y_new has a wrong shape %s." % y_new.shape
 
     msg = """
     Your X_new was wrongly updated, please check 
     if you had properly appended a new sample to the previous samples.
     """
-    assert_almost_equal(X_new[-1], ref_X_new, err_msg=msg)
+    assert_almost_equal(X_new[-1], X_new_ref[-1], err_msg=msg)
 
     msg = """
     Your y_new was wrongly updated, please check 
     if you had properly appended a new sample to the previous samples.
     """
-    assert_almost_equal(y_new[-1], ref_y_new, err_msg=msg)
+    assert_almost_equal(y_new[-1], y_new_ref[-1], err_msg=msg)
 
     new_belief = sampler.model.predict_proba(test_point)[0]
-    ref_belief = np.array([0.47158731, 0.26481555, 0.26359714])
+    new_belief_ref = sampler_ref.model.predict_proba(test_point)[0]
 
     msg = """Your updated belief is different from expected belief. 
     Please make sure you don't make any modifications to the BaseSampler class.
     """
-    assert_almost_equal(new_belief, ref_belief, err_msg=msg)
+    assert_almost_equal(new_belief, new_belief_ref, err_msg=msg)
 
     test_ok()
+    sampler.model.plot(plot_types=('belief', 'entropy'), title="Updated Belief Model")
 
 
 def test_movement_cost(SamplerClass):
     sampler, points = init_test(SamplerClass)
+    sampler_ref, _ = init_test(AdaptiveSampling)
 
     test_points = [np.array([1, 2]), np.array([-2, 0.5]), np.array([1.5, -1])]
-    ref_costs = [2.23606797749979, 2.0615528128088303, 1.8027756377319946]
-    for point, ref_cost in zip(test_points, ref_costs):
+    for point in test_points:
         cost = sampler.movement_cost(point)
+        cost_ref = sampler_ref.movement_cost(point)
         assert isinstance(cost, float), "Your cost is not a scalar."
-        assert_almost_equal(cost, ref_cost, err_msg="Your computed cost is wrong.")
+        assert_almost_equal(cost, cost_ref, err_msg="Your computed cost is wrong.")
 
     test_ok()
 
 
 def test_pick_next_point(SamplerClass):
     sampler, points = init_test(SamplerClass)
+    sampler_ref, _ = init_test(AdaptiveSampling)
     next_point, reward = sampler.pick_next_point()
-
-    ref_point = [np.array([-2.87755102, -0.06122449]), np.array([-0.06122449, -2.87755102])]
-    ref_reward = 0.9991007669287046
+    next_point_ref, reward_ref = sampler_ref.pick_next_point()
 
     msg = """
     You picked up a wrong point. Please check your `sample_explore_exploit` method 
     and your usage of `_get_points_from_horizon` method.
     """
     try:
-        assert_almost_equal(next_point, ref_point[0], err_msg=msg)
+        assert_almost_equal(next_point, next_point_ref[0], err_msg=msg)
     except AssertionError:
-        assert_almost_equal(next_point, ref_point[1], err_msg=msg)
-    assert_almost_equal(reward, ref_reward, err_msg=msg)
+        assert_almost_equal(next_point, next_point_ref[1], err_msg=msg)
+    assert_almost_equal(reward, reward_ref, err_msg=msg)
 
     test_ok()
 
 
 def test_start_explore(SamplerClass):
     sampler, points = init_test(SamplerClass)
+    sampler_ref, _ = init_test(SamplerClass)
     ref_budget = sampler.distance_budget
     ref_point = np.array(sampler.pose)
     sampler.start_explore()
