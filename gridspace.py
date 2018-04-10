@@ -1,7 +1,7 @@
 import sklearn
 from sklearn.gaussian_process import GaussianProcessClassifier
 import scipy
-from scipy.stats import multivariate_normal
+from scipy.stats import multivariate_normal 
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches
@@ -240,3 +240,10 @@ def plot_sampled_features(Z, feature_dict, N=N_default, xlim=xlim_default, ylim=
     # Put a legend to the right of the current axis
     ax.legend(handles=legendHandlesList, loc='center left', bbox_to_anchor=(1, 0.5))
     plt.show()
+
+    
+def grab_highRes_points(feature_dict):
+    X, Y, Z = gen_gridded_space_DET(feature_dict, N=50)
+    X_highRes, y_highRes = parse_map_for_GP(X, Y, Z)
+    
+    return X_highRes, y_highRes

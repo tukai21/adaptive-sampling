@@ -1,10 +1,6 @@
 from matplotlib.patches import Ellipse
 from gridspace import gen_gridded_space_DET, plot_sampled_features
 
-# from this file, need to import 
-# simple_feature_dict or complex_feature_dict as feature_dict
-# plot_dict as is
-# feature_stats as is
 
 # Global constants
 feature_scale = 2
@@ -35,27 +31,9 @@ plot_dict = {
 feature_stats = [(0, 1), (6, 4), (5, 9)]
 
 
+
 def show_grid(N=10,feature_dict = complex_feature_dict):
     X, Y, Z = gen_gridded_space_DET(feature_dict, N=N)
 
     plot_sampled_features(Z, feature_dict, N=N, titleStr='Sampled Points for All Features - Low Resolution')
     
-'''
-def test_low_resolution():
-    # Test gridded representation of the features (low res, initial sample)
-    N = 5
-    X, Y, Z = gen_gridded_space_DET(feature_dict, N=N)
-
-    plot_sampled_features(Z, feature_dict, N=N, titleStr='Sampled Points for All Features - Low Resolution')
-    
-#test_low_resolution()
-
-def test_high_resolution():
-    # Test gridded representation of the features (low res, initial sample)
-    N = 15
-    X, Y, Z = gen_gridded_space_DET(feature_dict, N=N)
-
-    plot_sampled_features(Z, feature_dict, N=N, plotNoFeatures=True,
-                          titleStr='Sampled Points for All Features - High Resolution')
-    
-test_high_resolution()'''   

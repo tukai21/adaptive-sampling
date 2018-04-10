@@ -3,14 +3,8 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 from sklearn.gaussian_process import GaussianProcessClassifier
 from sklearn.neighbors import KNeighborsClassifier
-
-
-feature_name_colors = (('Red', 'No Features'), ('Green', 'Feature 1'), ('Blue', 'Feature 2'))
-
-
-plot_dict = {
-    'feature_name_colors': feature_name_colors
-}
+from gridspace import grab_highRes_points
+from map_truth import plot_dict, feature_stats
 
 
 class BeliefModel:
@@ -79,7 +73,7 @@ class BeliefModel:
         # ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
         return ax
 
-    def plot(self, title='Gaussian Process', plot_types=('belief', 'entropy', 'science'), feature_stats=None, fig_id=1,
+    def plot(self, title='Gaussian Process', plot_types=('belief', 'entropy', 'science'), feature_stats=feature_stats, fig_id=1,
              show_train=True, lines=np.array([]), points=np.array([]), star_point=np.array([])):
 
         if not self.plot_ready:
@@ -342,12 +336,40 @@ class BeliefModel:
         return fig, ax
 
 
-def compare_models(model_1, model_2, add_random_points=True):
-    if add_random_points:
-        np.random.seed(0)
-        random_points = np.random.choice([1])  # TODO: you need to provide random points here
-        model_1.plot(title='Model_1', plot_types=('belief', 'entropy'), fig_id=1, points=random_points)
-        model_2.plot(title='Model_2', plot_types=('belief', 'entropy'), fig_id=1, points=random_points)
+    
+def compare_models(model_1, model_2, feature_dict,add_new_random_points=True, num_new_samples = 20):
+    if add_new_random_points:
+        if num_new_samples > 50:
+            print('Number of new samples greater than 50, capping at 50')
+            num_new_samples  =50
+        elif num_new_samples < 1:
+            print('Number of new samples less than 1, setting to 1')
+            num_new_samples = 1
+            
+       # np.random.seed(0)
+        
+        X_highRes, y_highRes = grab_highRes_points(feature_dict)
+        sample_inds = np.random.randint(0,X_highRes.shape[0],size=num_new_samples)
+        new_sample = (X_highRes[sample_inds,:],y_highRes[sample_inds])
+
+        # Assumes the two models are trained on the same initial dataset
+        X_new = model_1.X_train.copy()
+        y_new = model_1.y_train.copy()
+        
+        for new_ind in range(len(new_sample[0])):
+            if new_ind == 0:
+                new_points = np.array([new_sample[0][new_ind]])
+            else:
+                new_points = np.append(new_points,[new_sample[0][new_ind]], axis=0)
+                
+            X_new = np.append(X_new,[new_sample[0][new_ind]],axis=0)
+            y_new = np.append(y_new,[new_sample[1][new_ind]],axis=0)
+        
+        model_1.fit(X_new, y_new)
+        model_2.fit(X_new, y_new)
+        
+        model_1.plot(title='Model_1', plot_types=('belief', 'entropy'), fig_id=1, points=new_points)
+        model_2.plot(title='Model_2', plot_types=('belief', 'entropy'), fig_id=1, points=new_points)
     else:
         model_1.plot(title='Model_1', plot_types=('belief', 'entropy'), fig_id=1)
         model_2.plot(title='Model_2', plot_types=('belief', 'entropy'), fig_id=1)

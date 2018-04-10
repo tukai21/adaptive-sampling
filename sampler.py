@@ -47,6 +47,8 @@ class AdaptiveSampling:
 
     def sample_only_exploit(self, points):
         likelihoods = self.model.predict_proba(points)
+        
+        
         means = np.sum(likelihoods * np.array(self.feature_stats)[:, 0], axis=1)
 
         best_idx = np.argmax(means)
@@ -57,8 +59,20 @@ class AdaptiveSampling:
 
     def sample_only_explore(self, points):
         likelihoods = self.model.predict_proba(points)
-        entropies = np.sum(-likelihoods * np.log2(likelihoods), axis=1)
-
+        
+        
+        if  self.model.gpFlag:
+            entropies = np.sum(-likelihoods * np.log2(likelihoods), axis=1)
+        else:
+            entropies = np.zeros(likelihoods.shape[0])
+            for probs_ind in range(likelihoods.shape[0]):
+                for el in likelihoods[probs_ind, :]:
+                    if np.isclose(el, 0.0):
+                        # we should be adding 0 times positive infinity, which is 0 by convention of entropy
+                        entropies[probs_ind] += 0
+                    else:
+                        entropies[probs_ind] += -el * np.log2(el)
+                        
         best_idx = np.argmax(entropies)
         best_sample_loc = points[best_idx]
         highest_entropy = np.max(entropies)
@@ -68,7 +82,17 @@ class AdaptiveSampling:
     def sample_explore_exploit(self, points):
         likelihoods = self.model.predict_proba(points)
         means = np.sum(likelihoods * np.array(self.feature_stats)[:, 0], axis=1)
-        entropies = np.sum(-likelihoods * np.log2(likelihoods), axis=1)
+        if  self.model.gpFlag:
+            entropies = np.sum(-likelihoods * np.log2(likelihoods), axis=1)
+        else:
+            entropies = np.zeros(likelihoods.shape[0])
+            for probs_ind in range(likelihoods.shape[0]):
+                for el in likelihoods[probs_ind, :]:
+                    if np.isclose(el, 0.0):
+                        # we should be adding 0 times positive infinity, which is 0 by convention of entropy
+                        entropies[probs_ind] += 0
+                    else:
+                        entropies[probs_ind] += -el * np.log2(el)
 
         rewards = (1 - self.beta) * means / means.max() + self.beta * entropies / entropies.max()
 

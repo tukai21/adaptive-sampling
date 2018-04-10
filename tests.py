@@ -4,7 +4,7 @@ import operator
 
 from matplotlib.patches import Ellipse
 from sklearn.gaussian_process.kernels import RBF
-from belief_model import BeliefModel
+from belief_model import BeliefModel, compare_models
 from gridspace import gen_gridded_space_DET, parse_map_for_GP
 
 
@@ -30,12 +30,12 @@ def test_belief(model, title, N=5, gpFlag = True, plotChoice = "belief" ):
     
     model.fit(X_train, y_train)
     if  plotChoice == "entropy":
-        model.plot_entropy(title=title)
+        model.plot(plot_types=('belief', 'entropy'),title=title)
 
     elif plotChoice == "belief":
-        model.plot_belief(title=title)
+        model.plot(plot_types=('belief'),title=title)
     else:
-        # Plot both with subplot
+        model.plot(plot_types=('belief', 'entropy'),title=title)
         return
         
 
@@ -51,6 +51,7 @@ def test_ok():
 
 
 def init_test(SamplerClass):
+    # RECOMMEND WE CHANGE to N=
     X, Y, Z = gen_gridded_space_DET(feature_dict, N=3)
     X_init, y_init = parse_map_for_GP(X, Y, Z)
     X, Y, Z = gen_gridded_space_DET(feature_dict, N=50)
@@ -74,11 +75,12 @@ def init_test(SamplerClass):
 
 def test_exploitation(SamplerClass):
     sampler, points = init_test(SamplerClass)
-
     best_sample_loc, best_mean = sampler.sample_only_exploit(points)
     ref_loc = np.array([-2.14285714, -0.06122449])
     ref_mean = 3.673970240755864
-
+    sampler.model.plot(plot_types=('belief', 'science'),title="Selected Best Science Point (star)", points=np.array(points), star_point=np.array(best_sample_loc), feature_stats = feature_stats)
+    
+    
     assert best_sample_loc.shape == (2, ), "Your best_sample_loc has a wrong shape %s, which is expected to be (2, )." % best_sample_loc.shape
     assert isinstance(best_mean, float), "Your best_mean is not a scalar."
     assert_almost_equal(best_mean, ref_mean, decimal=4, err_msg="Your best_mean has a wrong value.")
@@ -92,7 +94,8 @@ def test_exploration(SamplerClass):
     best_sample_loc, max_entropy = sampler.sample_only_explore(points)
     ref_loc = np.array([1.7755102, -1.53061224])
     ref_entropy = 1.5848915110699364
-
+    sampler.model.plot(plot_types=('belief', 'entropy'),title="Selected Best Explore Point (star)", points=np.array(points), star_point=np.array(best_sample_loc), feature_stats = feature_stats)
+    
     assert best_sample_loc.shape == (2, ), "Your best_sample_loc has a wrong shape %s, which is expected to be (2, )." % best_sample_loc.shape
     assert isinstance(max_entropy, float), "Your max_entropy is not a scalar."
     assert_almost_equal(max_entropy, ref_entropy, decimal=4, err_msg="Your max_entropy has a wrong value.")
@@ -106,7 +109,8 @@ def test_exploration_exploitation(SamplerClass):
     best_sample_loc, max_reward = sampler.sample_explore_exploit(points)
     ref_loc = np.array([-2.14285714, -0.06122449])
     ref_reward = 0.9995656321214331
-
+    sampler.model.plot(plot_types=('belief', 'entropy','science'),title="Selected Best Explore-Exploit Point (star)", points=np.array(points), star_point=np.array(best_sample_loc), feature_stats = feature_stats)
+    
     assert best_sample_loc.shape == (2, ), "Your best_sample_loc has a wrong shape %s, which is expected to be (2, )." % best_sample_loc.shape
     assert isinstance(max_reward, float), "Your max_reward is not a scalar."
     assert_almost_equal(max_reward, ref_reward, decimal=4, err_msg="Your max_reward has a wrong value.")
@@ -115,15 +119,22 @@ def test_exploration_exploitation(SamplerClass):
 
 
 def test_update_belief(SamplerClass):
+    
     sampler, points = init_test(SamplerClass)
-
+    
+    sampler.model.plot_belief(title="Initial Belief Model")
     test_point = np.array([0, 1]).reshape(1, -1)
     prev_belief = sampler.model.predict_proba(test_point)[0]
-
+    
+    
+    
     new_point = sampler.world_map[125]
     feature = sampler.science_map[125]
     new_sample = (new_point, np.array([feature]))
     X_new, y_new = sampler.update_belief(new_sample)
+    
+    final_model = sampler.model
+    final_model.plot_belief(title="Updated Belief Model")
     ref_X_new = np.array([0.06122449, -2.75510204])
     ref_y_new = np.array([0])
 
