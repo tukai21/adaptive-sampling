@@ -138,6 +138,7 @@ class BeliefModel:
         if lines.any():
             ax.plot(lines[:, 0], lines[:, 1], c="k", lineWidth=5)
 
+        ax.set_title("Belief Map")
         ax = self._format_axes(ax)
 
         return fig, ax
@@ -172,6 +173,7 @@ class BeliefModel:
             if star_point.any():
                 ax.scatter(star_point[0], star_point[1], c='red', marker='*', s=500)
 
+        ax.set_title("Entropy Map")
         ax = self._format_axes(ax)
 
         return fig, ax
@@ -202,6 +204,7 @@ class BeliefModel:
         cbar = fig.colorbar(contour, ax=ax)
         cbar.ax.set_ylabel('Expected Science Return (mean only)')
 
+        ax.set_title("Science Reward Map")
         ax = self._format_axes(ax)
 
         return fig, ax
@@ -336,7 +339,6 @@ class BeliefModel:
         return fig, ax
 
 
-    
 def compare_models(model_1, model_2, feature_dict,add_new_random_points=True, num_new_samples = 20):
     if add_new_random_points:
         if num_new_samples > 50:
