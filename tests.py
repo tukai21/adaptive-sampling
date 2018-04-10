@@ -77,8 +77,8 @@ def init_test(SamplerClass):
 def test_exploitation(SamplerClass):
     sampler, points = init_test(SamplerClass)
     sampler_ref, _ = init_test(AdaptiveSampling)
-    best_sample_loc, best_mean = sampler.sample_only_exploit(points)
-    best_sample_loc_ref, best_mean_ref = sampler_ref.sample_only_exploit(points)
+    best_sample_loc, best_mean = sampler.sample_only_exploit(sampler.world_map)
+    best_sample_loc_ref, best_mean_ref = sampler_ref.sample_only_exploit(sampler.world_map)
 
     assert best_sample_loc.shape == (2, ), "Your best_sample_loc has a wrong shape %s, which is expected to be (2, )." % best_sample_loc.shape
     assert isinstance(best_mean, float), "Your best_mean is not a scalar."
@@ -94,8 +94,8 @@ def test_exploration(SamplerClass):
     sampler, points = init_test(SamplerClass)
     sampler_ref, _ = init_test(AdaptiveSampling)
 
-    best_sample_loc, max_entropy = sampler.sample_only_explore(points)
-    best_sample_loc_ref, max_entropy_ref = sampler_ref.sample_only_explore(points)
+    best_sample_loc, max_entropy = sampler.sample_only_explore(sampler.world_map)
+    best_sample_loc_ref, max_entropy_ref = sampler_ref.sample_only_explore(sampler.world_map)
     
     assert best_sample_loc.shape == (2, ), "Your best_sample_loc has a wrong shape %s, which is expected to be (2, )." % best_sample_loc.shape
     assert isinstance(max_entropy, float), "Your max_entropy is not a scalar."
@@ -111,8 +111,8 @@ def test_exploration_exploitation(SamplerClass):
     sampler, points = init_test(SamplerClass)
     sampler_ref, _ = init_test(AdaptiveSampling)
 
-    best_sample_loc, max_reward = sampler.sample_explore_exploit(points)
-    best_sample_loc_ref, max_reward_ref = sampler_ref.sample_explore_exploit(points)
+    best_sample_loc, max_reward = sampler.sample_explore_exploit(sampler.world_map)
+    best_sample_loc_ref, max_reward_ref = sampler_ref.sample_explore_exploit(sampler.world_map)
     
     assert best_sample_loc.shape == (2, ), "Your best_sample_loc has a wrong shape %s, which is expected to be (2, )." % best_sample_loc.shape
     assert isinstance(max_reward, float), "Your max_reward is not a scalar."
@@ -189,9 +189,9 @@ def test_pick_next_point(SamplerClass):
     and your usage of `_get_points_from_horizon` method.
     """
     try:
-        assert_almost_equal(next_point, next_point_ref[0], err_msg=msg)
+        assert_almost_equal(next_point[0], next_point_ref[0], err_msg=msg)
     except AssertionError:
-        assert_almost_equal(next_point, next_point_ref[1], err_msg=msg)
+        assert_almost_equal(next_point[0], next_point_ref[1], err_msg=msg)
     assert_almost_equal(reward, reward_ref, err_msg=msg)
 
     test_ok()
