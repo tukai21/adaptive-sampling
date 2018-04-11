@@ -23,7 +23,7 @@ plot_dict = {
 feature_stats = [(0, 1), (6, 4), (5, 9)]
 
 
-def test_belief(model, title, N=5, gpFlag=True, plotChoice="belief" ):
+def test_belief(model, title, N=5, gpFlag=True, plotChoice="belief"):
     X, Y, Z = gen_gridded_space_DET(feature_dict, N=N)
     X_train, y_train = parse_map_for_GP(X, Y, Z)
     
@@ -32,9 +32,9 @@ def test_belief(model, title, N=5, gpFlag=True, plotChoice="belief" ):
         model.plot(plot_types=('belief', 'entropy'),title=title)
 
     elif plotChoice == "belief":
-        model.plot(plot_types=('belief'), title=title)
+        model.plot(plot_types=('belief', ), title=title)
     else:
-        model.plot(plot_types=('belief', 'entropy'),title=title)
+        model.plot(plot_types=('belief', 'entropy'), title=title)
         return
         
 
