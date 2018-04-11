@@ -42,6 +42,16 @@ class BeliefModel:
     def predict_proba(self, X):
         return self.model.predict_proba(X)
 
+    def print_kernel(self):
+        if self.gpFlag:
+            for kernel_list in self.model.kernel_.get_params().values():
+                print("Kernel values for each feature")
+                for kernel in kernel_list:
+                    print(kernel)
+        else:
+            print("K-Neighbors Classifier")
+            print("n_neighbors = " + str(self.n_neighbors))
+                
     def _format_data(self):
         x_min, x_max = self.X_train[:, 0].min() - 1, self.X_train[:, 0].max() + 1
         y_min, y_max = self.X_train[:, 1].min() - 1, self.X_train[:, 1].max() + 1
