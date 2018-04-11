@@ -1,2 +1,2 @@
 # adaptive-sampling
-Advanced Lecture #6 - Adaptive Sampling 
+MIT 16.412 Advanced Lecture #6 - Adaptive Sampling 
