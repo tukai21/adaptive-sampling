@@ -7,3 +7,5 @@ This is a mini-pset repository for the class. The students assigned to this Mini
 - `gridspace.py` : Util-functions for generating world maps, training data, and plotting
 - `map_truth.py` : All the global variables (problem settings, model hyperparameters, etc.)
 - `tests.py` : All the test functions
+
+We also provide a tutorial `Tutorial.pdf` that describes more in detail about adaptive sampling algorithms. The students are encouraged to refer to this tutorial to better understand the concepts and actual implementations of the algorithms.
