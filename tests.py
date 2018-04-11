@@ -1,12 +1,10 @@
 import numpy as np
 from numpy.testing import assert_almost_equal
-import operator
 
 from matplotlib.patches import Ellipse
 from sklearn.gaussian_process.kernels import RBF
-from belief_model import BeliefModel, compare_models
+from belief_model import BeliefModel
 from gridspace import gen_gridded_space_DET, parse_map_for_GP
-from sampler import AdaptiveSampling
 
 
 # Global constants
@@ -76,9 +74,9 @@ def init_test(SamplerClass):
 
 def test_exploitation(SamplerClass):
     sampler, points = init_test(SamplerClass)
-    sampler_ref, _ = init_test(AdaptiveSampling)
     best_sample_loc, best_mean = sampler.sample_only_exploit(sampler.world_map)
-    best_sample_loc_ref, best_mean_ref = sampler_ref.sample_only_exploit(sampler.world_map)
+    best_sample_loc_ref = np.array([-1.40816327, -3.0])
+    best_mean_ref = 3.9126446457202744
 
     assert best_sample_loc.shape == (2, ), "Your best_sample_loc has a wrong shape %s, which is expected to be (2, )." % best_sample_loc.shape
     assert isinstance(best_mean, float), "Your best_mean is not a scalar."
@@ -92,10 +90,10 @@ def test_exploitation(SamplerClass):
 
 def test_exploration(SamplerClass):
     sampler, points = init_test(SamplerClass)
-    sampler_ref, _ = init_test(AdaptiveSampling)
-
     best_sample_loc, max_entropy = sampler.sample_only_explore(sampler.world_map)
-    best_sample_loc_ref, max_entropy_ref = sampler_ref.sample_only_explore(sampler.world_map)
+
+    best_sample_loc_ref = np.array([0.42857143, -3.0])
+    max_entropy_ref = 1.5779378075008879
     
     assert best_sample_loc.shape == (2, ), "Your best_sample_loc has a wrong shape %s, which is expected to be (2, )." % best_sample_loc.shape
     assert isinstance(max_entropy, float), "Your max_entropy is not a scalar."
@@ -109,10 +107,9 @@ def test_exploration(SamplerClass):
 
 def test_exploration_exploitation(SamplerClass):
     sampler, points = init_test(SamplerClass)
-    sampler_ref, _ = init_test(AdaptiveSampling)
-
     best_sample_loc, max_reward = sampler.sample_explore_exploit(sampler.world_map)
-    best_sample_loc_ref, max_reward_ref = sampler_ref.sample_explore_exploit(sampler.world_map)
+    best_sample_loc_ref = np.array([0.06122449, -3.0])
+    max_reward_ref = 0.9456384710012432
     
     assert best_sample_loc.shape == (2, ), "Your best_sample_loc has a wrong shape %s, which is expected to be (2, )." % best_sample_loc.shape
     assert isinstance(max_reward, float), "Your max_reward is not a scalar."
@@ -126,34 +123,34 @@ def test_exploration_exploitation(SamplerClass):
 
 def test_update_belief(SamplerClass):
     sampler, points = init_test(SamplerClass)
-    sampler_ref, _ = init_test(AdaptiveSampling)
-    
+
     sampler.model.plot(plot_types=('belief', 'entropy'), title="Initial Belief Model")
-    test_point = np.array([0, 1]).reshape(1, -1)
 
     new_point = sampler.world_map[125]
     feature = sampler.science_map[125]
     new_sample = (new_point, np.array([feature]))
     X_new, y_new = sampler.update_belief(new_sample)
-    X_new_ref, y_new_ref = sampler_ref.update_belief(new_sample)
+    X_new_ref = np.array([0.06122449, -2.75510204])
+    y_new_ref = 0
 
-    assert X_new.shape == X_new_ref.shape, "X_new has a wrong shape %s." % X_new.shape
-    assert y_new.shape == y_new_ref.shape, "y_new has a wrong shape %s." % y_new.shape
+    assert X_new.shape == (26, 2), "X_new has a wrong shape %s." % X_new.shape
+    assert y_new.shape == (26, ), "y_new has a wrong shape %s." % y_new.shape
 
     msg = """
     Your X_new was wrongly updated, please check 
     if you had properly appended a new sample to the previous samples.
     """
-    assert_almost_equal(X_new[-1], X_new_ref[-1], err_msg=msg)
+    assert_almost_equal(X_new[-1], X_new_ref, err_msg=msg)
 
     msg = """
     Your y_new was wrongly updated, please check 
     if you had properly appended a new sample to the previous samples.
     """
-    assert_almost_equal(y_new[-1], y_new_ref[-1], err_msg=msg)
+    assert_almost_equal(y_new[-1], y_new_ref, err_msg=msg)
 
+    test_point = np.array([0, 1]).reshape(1, -1)
     new_belief = sampler.model.predict_proba(test_point)[0]
-    new_belief_ref = sampler_ref.model.predict_proba(test_point)[0]
+    new_belief_ref = np.array([0.41139556, 0.11091929, 0.47768514])
 
     msg = """Your updated belief is different from expected belief. 
     Please make sure you don't make any modifications to the BaseSampler class.
@@ -166,12 +163,11 @@ def test_update_belief(SamplerClass):
 
 def test_movement_cost(SamplerClass):
     sampler, points = init_test(SamplerClass)
-    sampler_ref, _ = init_test(AdaptiveSampling)
 
     test_points = [np.array([1, 2]), np.array([-2, 0.5]), np.array([1.5, -1])]
-    for point in test_points:
+    costs_ref = [2.23606797749979, 2.0615528128088303, 1.8027756377319946]
+    for point, cost_ref in zip(test_points, costs_ref):
         cost = sampler.movement_cost(point)
-        cost_ref = sampler_ref.movement_cost(point)
         assert isinstance(cost, float), "Your cost is not a scalar."
         assert_almost_equal(cost, cost_ref, err_msg="Your computed cost is wrong.")
 
@@ -180,9 +176,9 @@ def test_movement_cost(SamplerClass):
 
 def test_pick_next_point(SamplerClass):
     sampler, points = init_test(SamplerClass)
-    sampler_ref, _ = init_test(AdaptiveSampling)
     next_point, reward = sampler.pick_next_point()
-    next_point_ref, reward_ref = sampler_ref.pick_next_point()
+    next_point_ref = np.array([0.06122449, -2.87755102])
+    reward_ref = 0.9445523501106565
 
     msg = """
     You picked up a wrong point. Please check your `sample_explore_exploit` method 
@@ -199,7 +195,6 @@ def test_pick_next_point(SamplerClass):
 
 def test_start_explore(SamplerClass):
     sampler, points = init_test(SamplerClass)
-    sampler_ref, _ = init_test(SamplerClass)
     ref_budget = sampler.distance_budget
     ref_point = np.array(sampler.pose)
     sampler.start_explore()
